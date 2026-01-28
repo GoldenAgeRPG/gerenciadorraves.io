@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JKGA - Kumópolis Template Editor v4</title>
+<style>
+:root{
+  --bg:#050505;
+  --panel:#0f0f0f;
+  --panel-border:#222;
+  --accent:#e1061b;
+  --text:#ddd;
+  --text-muted:#666;
+  --font:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --mono:"JetBrains Mono", "Fira Code", Consolas, monospace;
+}
+
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font);height:100vh;overflow:hidden;display:flex;flex-direction:column}
+
+/* HEADER STYLE */
+header{
+  height:50px; flex-shrink:0;
+  border-bottom:1px solid var(--panel-border);
+  background:#0a0a0a;
+  display:flex;align-items:center;justify-content:space-between;padding:0 16px;
+}
+.brand{font-weight:900;letter-spacing:-0.5px;font-size:14px;color:#fff;}
+.brand span{color:var(--accent)}
+
+.actions{display:flex;gap:10px}
+.btn{
+  background:transparent;border:1px solid var(--panel-border);color:var(--text);
+  padding:6px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;
+  transition:all 0.2s;text-transform:uppercase;letter-spacing:0.5px;
+}
+.btn:hover{background:#1a1a1a;border-color:#444}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.primary:hover{filter:brightness(1.1)}
+.btn.warn{color:#ffb020;border-color:rgba(255,176,32,0.2)}
+.btn.warn:hover{background:rgba(255,176,32,0.1)}
+
+/* MAIN LAYOUT */
+.workspace{
+  display:grid;grid-template-columns:360px 1fr;
+  flex-grow:1;overflow:hidden;
+}
+
+/* LEFT PANEL (INPUTS) */
+.editor-sidebar{
+  background:var(--panel);
+  border-right:1px solid var(--panel-border);
+  overflow-y:auto;
+  padding:16px;
+  display:flex;flex-direction:column;gap:16px;
+}
+.section{
+  background:#141414;border:1px solid var(--panel-border);border-radius:8px;padding:12px;
+}
+.section-title{
+  font-size:10px;text-transform:uppercase;color:var(--accent);font-weight:800;letter-spacing:1px;
+  margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;
+}
+
+label{display:block;font-size:10px;color:var(--text-muted);margin:8px 0 4px;font-weight:600}
+input, textarea{
+  width:100%;background:#080808;border:1px solid var(--panel-border);
+  color:var(--text);padding:8px;border-radius:6px;font-family:var(--font);font-size:12px;
+  transition:border-color 0.2s;outline:none;
+}
+input:focus, textarea:focus{border-color:var(--accent)}
+textarea{resize:vertical;min-height:80px;line-height:1.5}
+
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+/* TOOLBAR */
+.toolbar{display:flex;gap:4px;margin-bottom:8px;flex-wrap:wrap}
+.tool{
+  background:#222;border:none;color:#ccc;width:24px;height:24px;border-radius:4px;
+  font-size:11px;font-weight:bold;cursor:pointer;display:flex;align-items:center;justify-content:center;
+}
+.tool:hover{background:#333;color:#fff}
+.tool.active-color{color:var(--accent)}
+
+/* RIGHT PANEL (PREVIEW + CODE) */
+.preview-area{
+  display:grid;grid-template-rows:1fr 180px; /* Code fixed height */
+  background:#000;
+  position:relative;
+}
+
+/* IFRAME PREVIEW */
+.iframe-wrap{width:100%;height:100%;position:relative;background:url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCIgb3BhY2l0eT0iMC4wNSI+PHBhdGggZD0iTTEgMWgydjJIMUMxeiIgZmlsbD0iI2ZmZiIvPjwvc3ZnPg==');}
+iframe{width:100%;height:100%;border:none;}
+
+/* CODE DOCK (IMPROVED) */
+.code-dock{
+  background:#0d0d0d;
+  border-top:1px solid var(--panel-border);
+  display:flex;flex-direction:column;
+}
+.dock-header{
+  height:32px;background:#111;border-bottom:1px solid var(--panel-border);
+  display:flex;align-items:center;justify-content:space-between;padding:0 10px;
+}
+.dock-title{font-size:10px;text-transform:uppercase;color:#555;font-weight:700}
+.dock-actions{display:flex;gap:8px}
+.mini-btn{
+  background:none;border:none;color:#777;font-size:10px;cursor:pointer;text-transform:uppercase;font-weight:bold;
+}
+.mini-btn:hover{color:#fff}
+
+.code-editor{
+  flex-grow:1;padding:10px;overflow:auto;
+  font-family:var(--mono);font-size:11px;color:#a9b7c6;
+  white-space:pre-wrap;word-break:break-all;
+  line-height:1.5;
+}
+.code-editor::-webkit-scrollbar{width:8px;background:#0d0d0d}
+.code-editor::-webkit-scrollbar-thumb{background:#222;border-radius:4px}
+
+/* PUPPETS STYLE */
+.puppet-item{
+  background:#0a0a0a;border:1px solid var(--panel-border);
+  border-radius:6px;padding:8px;margin-bottom:8px;position:relative;
+}
+.puppet-remove{
+  position:absolute;top:6px;right:6px;
+  background:rgba(255,0,0,0.1);color:var(--accent);border:none;
+  width:18px;height:18px;border-radius:4px;cursor:pointer;font-size:10px;
+}
+
+/* POPUPS */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:100;
+  display:none;align-items:center;justify-content:center;
+}
+.modal{
+  background:#111;border:1px solid var(--panel-border);width:400px;padding:20px;border-radius:12px;
+  box-shadow:0 20px 50px rgba(0,0,0,0.5);
+}
+.modal h3{margin:0 0 15px 0;font-size:14px;color:#fff;text-transform:uppercase}
+.modal-actions{margin-top:20px;display:flex;justify-content:flex-end;gap:10px}
+
+/* RESPONSIVE */
+@media(max-width:900px){
+  .workspace{grid-template-columns:1fr;overflow:auto}
+  .preview-area{grid-template-rows:400px auto}
+  body{overflow:auto}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">JKGA <span>BUILDER</span></div>
+  <div class="actions">
+    <button class="btn" onclick="modal('import')">Importar</button>
+    <button class="btn warn" onclick="modal('reset')">Reset</button>
+    <button class="btn primary" onclick="copyCode()">Copiar Código</button>
+  </div>
+</header>
+
+<div class="workspace">
+  
+  <div class="editor-sidebar">
+    
+    <div class="section">
+      <div class="section-title">Cabeçalho</div>
+      <label>Título Principal</label>
+      <input id="inp_title" placeholder="Titulo da RP">
+      <label>Subtítulo</label>
+      <input id="inp_subtitle" placeholder="alguma coisa bem foda aqui">
+      <label>Imagem do Banner (URL)</label>
+      <input id="inp_banner" placeholder="https://...">
+    </div>
+
+    <div class="section">
+      <div class="section-title">Status</div>
+      <div class="row2">
+        <div><label>HP (Atual/Máx)</label><input id="inp_hp" placeholder="100/100"></div>
+        <div><label>EA (Atual/Máx)</label><input id="inp_ea" placeholder="50/50"></div>
+      </div>
+      <label>SAN (Atual/Máx)</label>
+      <input id="inp_san" placeholder="80/90">
+    </div>
+
+    <div class="section">
+      <div class="section-title">Conteúdo do Post</div>
+      <div class="toolbar">
+        <button class="tool" onclick="wrap('[b]','[/b]')">B</button>
+        <button class="tool" onclick="wrap('[i]','[/i]')">I</button>
+        <button class="tool" onclick="wrap('[u]','[/u]')">U</button>
+        <button class="tool active-color" onclick="modal('color')">A</button>
+        <button class="tool" onclick="wrap('[center]','[/center]')">≡</button>
+        <button class="tool" onclick="wrap('[spoiler]','[/spoiler]')" style="width:auto;padding:0 6px">SPOILER</button>
+      </div>
+      <textarea id="inp_body" style="height:200px" placeholder="Escreva seu post ou RP aqui..."></textarea>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Datacenter / Notas</div>
+      <textarea id="inp_notes" placeholder="Conteúdo do spoiler de notas..."></textarea>
+    </div>
+
+    <div class="section">
+      <div class="section-title">
+        Kumópolis
+        <button class="btn primary" style="font-size:9px;padding:2px 6px;height:auto" onclick="addPuppet()">+ ADD</button>
+      </div>
+      <div id="puppet_list"></div>
+    </div>
+
+  </div>
+
+  <div class="preview-area">
+    <div class="iframe-wrap">
+      <iframe id="preview_frame"></iframe>
+    </div>
+    <div class="code-dock">
+      <div class="dock-header">
+        <span class="dock-title">Código Gerado (HTML Limpo)</span>
+        <div class="dock-actions">
+           <button class="mini-btn" onclick="copyCode()">Copiar</button>
+        </div>
+      </div>
+      <div class="code-editor" id="out_code"></div>
+    </div>
+  </div>
+
+</div>
+
+<div class="modal-overlay" id="modal_import">
+  <div class="modal">
+    <h3>Importar HTML</h3>
+    <textarea id="imp_text" style="height:150px;margin-bottom:15px" placeholder="Cole o código HTML antigo aqui..."></textarea>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('import')">Cancelar</button>
+      <button class="btn primary" onclick="doImport()">Processar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal_reset">
+  <div class="modal">
+    <h3>Tem certeza?</h3>
+    <p style="color:#888;font-size:12px;margin-bottom:20px">Isso vai apagar tudo que você digitou e voltar ao modelo padrão.</p>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('reset')">Cancelar</button>
+      <button class="btn warn" onclick="doReset()">Sim, Resetar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal_color">
+  <div class="modal">
+    <h3>Escolher Cor (Hex)</h3>
+    <input id="color_hex" value="#e1061b" placeholder="#RRGGBB" style="margin-bottom:15px">
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('color')">Cancelar</button>
+      <button class="btn primary" onclick="applyColor()">Aplicar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* --- STATE MANAGEMENT --- */
+const STORAGE = "jkga_v4_fixed";
+const DEFAULT_STATE = {
+  title: "TÍTULO",
+  subtitle: "SUBTÍTULO",
+  banner: "https://i.pinimg.com/originals/7d/a2/27/7da22786d8af6f03d8fcbd4f5ee3d402.jpg",
+  hp: "100/100", ea: "50/50", san: "90/100",
+  body: "[b]Início do Turno.[/b]\n\nAqui vai o texto interpretativo. Use [color=#e1061b]cores[/color] se quiser.",
+  notes: "[spoiler=Considerações]AAAAAA[/spoiler]",
+  puppets: []
+};
+
+let state = JSON.parse(JSON.stringify(DEFAULT_STATE));
+
+/* --- DOM ELEMENTS --- */
+const els = {
+  title: document.getElementById('inp_title'),
+  subtitle: document.getElementById('inp_subtitle'),
+  banner: document.getElementById('inp_banner'),
+  hp: document.getElementById('inp_hp'),
+  ea: document.getElementById('inp_ea'),
+  san: document.getElementById('inp_san'),
+  body: document.getElementById('inp_body'),
+  notes: document.getElementById('inp_notes'),
+  puppets: document.getElementById('puppet_list'),
+  code: document.getElementById('out_code'),
+  frame: document.getElementById('preview_frame'),
+  modals: {
+    import: document.getElementById('modal_import'),
+    reset: document.getElementById('modal_reset'),
+    color: document.getElementById('modal_color')
+  }
+};
+
+/* --- CORE FUNCTIONS --- */
+function init(){
+  const saved = localStorage.getItem(STORAGE);
+  if(saved) {
+    try { state = JSON.parse(saved); } catch(e){ console.error("Save corrupted"); }
+  }
+  renderInputs();
+  renderPuppets();
+  update();
+  
+  // Bind inputs
+  ['title','subtitle','banner','hp','ea','san','body','notes'].forEach(k => {
+    els[k].addEventListener('input', (e) => {
+      state[k] = e.target.value;
+      saveAndUpdate();
+    });
+  });
+}
+
+function saveAndUpdate(){
+  localStorage.setItem(STORAGE, JSON.stringify(state));
+  update();
+}
+
+function update(){
+  const html = generateHTML(false);
+  const preview = generateHTML(true);
+  
+  els.code.textContent = html;
+  
+  const doc = els.frame.contentWindow.document;
+  doc.open();
+  doc.write(preview);
+  doc.close();
+}
+
+function renderInputs(){
+  ['title','subtitle','banner','hp','ea','san','body','notes'].forEach(k => {
+    els[k].value = state[k] || "";
+  });
+}
+
+/* --- HTML GENERATOR --- */
+function generateHTML(isPreview){
+  const css = "https://goldenagerpg.github.io/templates.io/mirai-template.css";
+  
+  // Puppets HTML
+  let pHtml = "";
+  if(state.puppets && state.puppets.length > 0){
+    pHtml = state.puppets.map(p => {
+      const batHtml = p.hasBat 
+        ? `<div class="mirai-puppet-stat is-battery"><div class="mirai-puppet-label">BAT</div><div class="mirai-puppet-bar-bg"><span class="mirai-puppet-fill mirai-bat-fill" style="width:${calcPct(p.bat)}%"></span></div><div class="mirai-puppet-val">${p.bat}</div></div>`
+        : "";
+      return `<div class="mirai-puppet${p.hasBat?'':' no-battery'}" style="--puppet-icon:url('${p.icon}');"><div class="mirai-puppet-icon"></div><div><div class="mirai-puppet-name"><span>${p.name}</span><small>${p.hasBat?'':''}</small></div><div class="mirai-puppet-stats"><div class="mirai-puppet-stat"><div class="mirai-puppet-label">DUR</div><div class="mirai-puppet-bar-bg"><span class="mirai-puppet-fill mirai-dur-fill" style="width:${calcPct(p.dur)}%"></span></div><div class="mirai-puppet-val">${p.dur}</div></div>${batHtml}</div></div></div>`;
+    }).join("");
+  }
+
+  // Parse Body
+  let bodyContent = escape(state.body);
+  let notesContent = escape(state.notes);
+  
+  if(isPreview){
+    bodyContent = parseBB(bodyContent);
+    notesContent = parseBB(notesContent);
+  } else {
+    bodyContent = bodyContent.replace(/\n/g, "<br>");
+  }
+  
+  const inner = `
+<div class="mirai-card" style="--mira-banner:url('${state.banner}');">
+  <div class="mirai-targets"></div>
+  <div class="mirai-header">
+    <div class="mirai-slices"></div>
+    <div class="mirai-title-row"><div class="mirai-title">${state.title}</div><div class="mirai-subtitle">${state.subtitle}</div></div>
+    <div class="mirai-bolt"></div>
+  </div>
+  <div class="mirai-status">
+    <div class="mirai-status-item"><div class="mirai-status-label">HP</div><div class="mirai-bar-bg"><span class="mirai-hp-fill mirai-bar-fill" style="width:${calcPct(state.hp)}%"></span></div><div class="mirai-status-value">${state.hp}</div></div>
+    <div class="mirai-status-item"><div class="mirai-status-label">EA</div><div class="mirai-bar-bg"><span class="mirai-ea-fill mirai-bar-fill" style="width:${calcPct(state.ea)}%"></span></div><div class="mirai-status-value">${state.ea}</div></div>
+    <div class="mirai-status-item"><div class="mirai-status-label">SAN</div><div class="mirai-bar-bg"><span class="mirai-san-fill mirai-bar-fill" style="width:${calcPct(state.san)}%"></span></div><div class="mirai-status-value">${state.san}</div></div>
+  </div>
+  <div class="mirai-content"><div class="mirai-textbox">${bodyContent}</div></div>
+  <div class="mirai-footer">
+    <div class="mirai-block mirai-notes-block"><div class="mirai-notes"><span>${notesContent}</span></div></div>
+    ${pHtml ? `<div class="mirai-block mirai-puppets-block"><div class="mirai-puppets">${pHtml}</div></div>` : ''}
+    <div class="mirai-signature"></div>
+  </div>
+</div>`;
+
+  if(isPreview){
+    return `<!DOCTYPE html><html><head><link rel="stylesheet" href="${css}"><style>body{background:#000;display:flex;justify-content:center;margin:0;padding:20px}</style></head><body>${inner}</body></html>`;
+  } else {
+    return `<link rel="stylesheet" href="${css}">${inner}`.replace(/\s+/g,' ').replace(/> </g,'><').trim();
+  }
+}
+
+/* --- HELPERS --- */
+function calcPct(val){
+  if(!val) return 0;
+  const p = val.split('/');
+  if(p.length !== 2) return 100;
+  return Math.min(100, Math.max(0, (parseFloat(p[0])/parseFloat(p[1]))*100)) || 0;
+}
+
+function escape(s){
+  return (s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+
+function parseBB(s){
+  return s.replace(/\n/g, '<br>')
+    .replace(/\[b\](.*?)\[\/b\]/gi, '<b>$1</b>')
+    .replace(/\[i\](.*?)\[\/i\]/gi, '<i>$1</i>')
+    .replace(/\[u\](.*?)\[\/u\]/gi, '<u>$1</u>')
+    .replace(/\[color=(.*?)\](.*?)\[\/color\]/gi, '<span style="color:$1">$2</span>')
+    .replace(/\[center\](.*?)\[\/center\]/gi, '<div style="text-align:center">$1</div>')
+    .replace(/\[spoiler(?:=.*?)?\](.*?)\[\/spoiler\]/gi, '<div style="background:#111;border:1px solid #333;padding:5px;font-size:10px;color:#888">$1</div>');
+}
+
+/* --- PUPPETS LOGIC --- */
+function renderPuppets(){
+  els.puppets.innerHTML = "";
+  state.puppets.forEach((p,i) => {
+    const div = document.createElement('div');
+    div.className = 'puppet-item';
+    div.innerHTML = `
+      <button class="puppet-remove" onclick="removePuppet(${i})">X</button>
+      <div class="row2">
+        <div><label>Nome</label><input oninput="upPuppet(${i},'name',this.value)" value="${p.name}"></div>
+        <div><label>Ícone</label><input oninput="upPuppet(${i},'icon',this.value)" value="${p.icon}"></div>
+      </div>
+      <div class="row2">
+        <div><label>DUR</label><input oninput="upPuppet(${i},'dur',this.value)" value="${p.dur}"></div>
+        <div><label>BAT</label><input oninput="upPuppet(${i},'bat',this.value)" value="${p.bat}" ${!p.hasBat?'disabled style="opacity:0.3"':''}></div>
+      </div>
+      <div style="margin-top:5px">
+        <label style="display:inline-flex;align-items:center;gap:5px;margin:0;cursor:pointer">
+          <input type="checkbox" style="width:auto" onchange="upPuppet(${i},'hasBat',this.checked)" ${p.hasBat?'checked':''}>
+          Usa Bateria (EA)
+        </label>
+      </div>
+    `;
+    els.puppets.appendChild(div);
+  });
+}
+
+function addPuppet(){
+  if(!state.puppets) state.puppets = [];
+  state.puppets.push({name:"Nova Marionete", icon:"", dur:"20/20", bat:"100/100", hasBat:true});
+  renderPuppets(); saveAndUpdate();
+}
+function removePuppet(i){
+  state.puppets.splice(i,1);
+  renderPuppets(); saveAndUpdate();
+}
+function upPuppet(i,k,v){
+  state.puppets[i][k] = v;
+  if(k === 'hasBat') renderPuppets(); // Re-render to disable/enable inputs
+  saveAndUpdate();
+}
+
+/* --- EDITOR TOOLS --- */
+function wrap(opentag, closetag){
+  const el = els.body;
+  const start = el.selectionStart;
+  const end = el.selectionEnd;
+  const val = el.value;
+  const sel = val.substring(start, end);
+  el.value = val.substring(0, start) + opentag + sel + closetag + val.substring(end);
+  el.selectionStart = el.selectionEnd = start + opentag.length + sel.length + closetag.length;
+  el.focus();
+  state.body = el.value;
+  saveAndUpdate();
+}
+
+/* --- MODALS & ACTIONS --- */
+function modal(id){ els.modals[id].style.display = 'flex'; }
+function closeModal(id){ els.modals[id].style.display = 'none'; }
+
+function doReset(){
+  state = JSON.parse(JSON.stringify(DEFAULT_STATE));
+  renderInputs(); renderPuppets(); saveAndUpdate();
+  closeModal('reset');
+}
+
+function applyColor(){
+  const hex = document.getElementById('color_hex').value;
+  wrap(`[color=${hex}]`, `[/color]`);
+  closeModal('color');
+}
+
+function doImport(){
+  const txt = document.getElementById('imp_text').value;
+  // Simple regex extractors
+  const ext = (regex) => (txt.match(regex) || [])[1] || "";
+  
+  const title = ext(/<div class="mirai-title">([\s\S]*?)<\/div>/i);
+  if(title) state.title = title;
+  
+  const body = ext(/<div class="mirai-textbox">([\s\S]*?)<\/div>/i);
+  if(body) state.body = body.replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]*>/g, '');
+  
+  renderInputs(); saveAndUpdate();
+  closeModal('import');
+}
+
+function copyCode(){
+  navigator.clipboard.writeText(els.code.textContent);
+  const btn = document.querySelector('.dock-actions .mini-btn');
+  const original = btn.textContent;
+  btn.textContent = "COPIADO!";
+  setTimeout(()=>btn.textContent=original, 1500);
+}
+
+// Window global exposure for inline onclicks
+window.modal = modal;
+window.closeModal = closeModal;
+window.doReset = doReset;
+window.addPuppet = addPuppet;
+window.removePuppet = removePuppet;
+window.upPuppet = upPuppet;
+window.wrap = wrap;
+window.applyColor = applyColor;
+window.doImport = doImport;
+window.copyCode = copyCode;
+
+// START
+init();
+</script>
+</body>
+</html>
