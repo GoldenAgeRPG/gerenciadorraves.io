@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>JKGA - Kumópolis Template Editor v4</title>
+<title>JKGA - Kumópolis Template Editor v4.1</title>
 <style>
 :root{
   --bg:#050505;
@@ -169,9 +169,9 @@ iframe{width:100%;height:100%;border:none;}
     <div class="section">
       <div class="section-title">Cabeçalho</div>
       <label>Título Principal</label>
-      <input id="inp_title" placeholder="Titulo da RP">
+      <input id="inp_title" placeholder="Nome do Personagem/Ficha">
       <label>Subtítulo</label>
-      <input id="inp_subtitle" placeholder="alguma coisa bem foda aqui">
+      <input id="inp_subtitle" placeholder="Frase ou Cargo">
       <label>Imagem do Banner (URL)</label>
       <input id="inp_banner" placeholder="https://...">
     </div>
@@ -268,12 +268,12 @@ iframe{width:100%;height:100%;border:none;}
 /* --- STATE MANAGEMENT --- */
 const STORAGE = "jkga_v4_fixed";
 const DEFAULT_STATE = {
-  title: "TÍTULO",
-  subtitle: "SUBTÍTULO",
+  title: "TÍTULO DA FICHA",
+  subtitle: "SUBTÍTULO OU CARGO",
   banner: "https://i.pinimg.com/originals/7d/a2/27/7da22786d8af6f03d8fcbd4f5ee3d402.jpg",
   hp: "100/100", ea: "50/50", san: "90/100",
   body: "[b]Início do Turno.[/b]\n\nAqui vai o texto interpretativo. Use [color=#e1061b]cores[/color] se quiser.",
-  notes: "[spoiler=Considerações]AAAAAA[/spoiler]",
+  notes: "[b]Status:[/b] OK\n[b]Ações:[/b] Nenhuma",
   puppets: []
 };
 
@@ -352,7 +352,8 @@ function generateHTML(isPreview){
       const batHtml = p.hasBat 
         ? `<div class="mirai-puppet-stat is-battery"><div class="mirai-puppet-label">BAT</div><div class="mirai-puppet-bar-bg"><span class="mirai-puppet-fill mirai-bat-fill" style="width:${calcPct(p.bat)}%"></span></div><div class="mirai-puppet-val">${p.bat}</div></div>`
         : "";
-      return `<div class="mirai-puppet${p.hasBat?'':' no-battery'}" style="--puppet-icon:url('${p.icon}');"><div class="mirai-puppet-icon"></div><div><div class="mirai-puppet-name"><span>${p.name}</span><small>${p.hasBat?'':''}</small></div><div class="mirai-puppet-stats"><div class="mirai-puppet-stat"><div class="mirai-puppet-label">DUR</div><div class="mirai-puppet-bar-bg"><span class="mirai-puppet-fill mirai-dur-fill" style="width:${calcPct(p.dur)}%"></span></div><div class="mirai-puppet-val">${p.dur}</div></div>${batHtml}</div></div></div>`;
+      // ALTERAÇÃO AQUI: Label INT em vez de DUR
+      return `<div class="mirai-puppet${p.hasBat?'':' no-battery'}" style="--puppet-icon:url('${p.icon}');"><div class="mirai-puppet-icon"></div><div><div class="mirai-puppet-name"><span>${p.name}</span><small>${p.hasBat?'':''}</small></div><div class="mirai-puppet-stats"><div class="mirai-puppet-stat"><div class="mirai-puppet-label">INT</div><div class="mirai-puppet-bar-bg"><span class="mirai-puppet-fill mirai-dur-fill" style="width:${calcPct(p.dur)}%"></span></div><div class="mirai-puppet-val">${p.dur}</div></div>${batHtml}</div></div></div>`;
     }).join("");
   }
 
@@ -364,7 +365,9 @@ function generateHTML(isPreview){
     bodyContent = parseBB(bodyContent);
     notesContent = parseBB(notesContent);
   } else {
+    // CORREÇÃO: Forçar <br> tanto no corpo quanto nas notas para o export final
     bodyContent = bodyContent.replace(/\n/g, "<br>");
+    notesContent = notesContent.replace(/\n/g, "<br>");
   }
   
   const inner = `
@@ -423,6 +426,7 @@ function renderPuppets(){
   state.puppets.forEach((p,i) => {
     const div = document.createElement('div');
     div.className = 'puppet-item';
+    // ALTERAÇÃO AQUI: Label Integridade
     div.innerHTML = `
       <button class="puppet-remove" onclick="removePuppet(${i})">X</button>
       <div class="row2">
@@ -430,7 +434,7 @@ function renderPuppets(){
         <div><label>Ícone</label><input oninput="upPuppet(${i},'icon',this.value)" value="${p.icon}"></div>
       </div>
       <div class="row2">
-        <div><label>DUR</label><input oninput="upPuppet(${i},'dur',this.value)" value="${p.dur}"></div>
+        <div><label>Integridade</label><input oninput="upPuppet(${i},'dur',this.value)" value="${p.dur}"></div>
         <div><label>BAT</label><input oninput="upPuppet(${i},'bat',this.value)" value="${p.bat}" ${!p.hasBat?'disabled style="opacity:0.3"':''}></div>
       </div>
       <div style="margin-top:5px">
