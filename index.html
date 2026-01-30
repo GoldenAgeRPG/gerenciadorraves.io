@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>JKGA - Kumópolis Template Editor v4.1</title>
+<title>JKGA - Kumópolis Template Editor v4.2 (Mobile Fix)</title>
 <style>
 :root{
   --bg:#050505;
@@ -94,7 +94,7 @@ textarea{resize:vertical;min-height:80px;line-height:1.5}
 .iframe-wrap{width:100%;height:100%;position:relative;background:url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCIgb3BhY2l0eT0iMC4wNSI+PHBhdGggZD0iTTEgMWgydjJIMUMxeiIgZmlsbD0iI2ZmZiIvPjwvc3ZnPg==');}
 iframe{width:100%;height:100%;border:none;}
 
-/* CODE DOCK (IMPROVED) */
+/* CODE DOCK */
 .code-dock{
   background:#0d0d0d;
   border-top:1px solid var(--panel-border);
@@ -143,11 +143,28 @@ iframe{width:100%;height:100%;border:none;}
 .modal h3{margin:0 0 15px 0;font-size:14px;color:#fff;text-transform:uppercase}
 .modal-actions{margin-top:20px;display:flex;justify-content:flex-end;gap:10px}
 
-/* RESPONSIVE */
+/* RESPONSIVE - MOBILE FIX */
 @media(max-width:900px){
-  .workspace{grid-template-columns:1fr;overflow:auto}
-  .preview-area{grid-template-rows:400px auto}
-  body{overflow:auto}
+  body{height:auto;overflow-y:auto;display:block}
+  header{position:sticky;top:0;z-index:50}
+  .workspace{display:block;height:auto;overflow:visible}
+  
+  /* Sidebar expande na tela */
+  .editor-sidebar{
+    width:100%;height:auto;overflow:visible;
+    border-right:none;padding-bottom:20px;
+  }
+  
+  /* Preview vai para baixo e ganha altura fixa */
+  .preview-area{
+    display:block;height:auto;
+    border-top:2px solid var(--panel-border);
+  }
+  .iframe-wrap{height:450px}
+  
+  /* Código ajustável */
+  .code-dock{height:auto}
+  .code-editor{height:250px}
 }
 </style>
 </head>
@@ -352,7 +369,6 @@ function generateHTML(isPreview){
       const batHtml = p.hasBat 
         ? `<div class="mirai-puppet-stat is-battery"><div class="mirai-puppet-label">BAT</div><div class="mirai-puppet-bar-bg"><span class="mirai-puppet-fill mirai-bat-fill" style="width:${calcPct(p.bat)}%"></span></div><div class="mirai-puppet-val">${p.bat}</div></div>`
         : "";
-      // ALTERAÇÃO AQUI: Label INT em vez de DUR
       return `<div class="mirai-puppet${p.hasBat?'':' no-battery'}" style="--puppet-icon:url('${p.icon}');"><div class="mirai-puppet-icon"></div><div><div class="mirai-puppet-name"><span>${p.name}</span><small>${p.hasBat?'':''}</small></div><div class="mirai-puppet-stats"><div class="mirai-puppet-stat"><div class="mirai-puppet-label">INT</div><div class="mirai-puppet-bar-bg"><span class="mirai-puppet-fill mirai-dur-fill" style="width:${calcPct(p.dur)}%"></span></div><div class="mirai-puppet-val">${p.dur}</div></div>${batHtml}</div></div></div>`;
     }).join("");
   }
@@ -365,7 +381,6 @@ function generateHTML(isPreview){
     bodyContent = parseBB(bodyContent);
     notesContent = parseBB(notesContent);
   } else {
-    // CORREÇÃO: Forçar <br> tanto no corpo quanto nas notas para o export final
     bodyContent = bodyContent.replace(/\n/g, "<br>");
     notesContent = notesContent.replace(/\n/g, "<br>");
   }
@@ -426,7 +441,6 @@ function renderPuppets(){
   state.puppets.forEach((p,i) => {
     const div = document.createElement('div');
     div.className = 'puppet-item';
-    // ALTERAÇÃO AQUI: Label Integridade
     div.innerHTML = `
       <button class="puppet-remove" onclick="removePuppet(${i})">X</button>
       <div class="row2">
